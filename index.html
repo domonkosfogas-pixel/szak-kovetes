@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0a0a">
+<title>SZAK Követő</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --orange: #e8591a; --orange-dark: #c4480f; --orange-soft: #fdeee6;
+    --ink: #141414; --grey: #6a6a6a; --grey-2: #9a9a9a; --line: #e4e4e4; --soft: #f6f4f1; --ok: #1a7f37;
+    --mono: 'Space Mono', 'Courier New', monospace; --text: 'Space Grotesk', 'Segoe UI', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: var(--text); color: var(--ink); background: #fff; font-size: 16px; line-height: 1.45;
+         min-height: 100vh; display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  button:disabled { cursor: default; }
+  input { font: inherit; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+  /* ---------- fejléc ---------- */
+  .top { background: var(--black); color: #fff; border-top: 8px solid var(--orange); position: sticky; top: 0; z-index: 20; }
+  .top-inner { max-width: 760px; margin: 0 auto; padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; }
+  .brand { font-family: var(--mono); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 1rem; flex: 1; }
+  .brand small { display: block; font-size: .65rem; letter-spacing: .12em; color: var(--orange); }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--orange); color: #fff; font-family: var(--mono);
+            font-weight: 700; display: grid; place-items: center; text-transform: uppercase; }
+  .tabs { max-width: 760px; margin: 0 auto; display: flex; padding: 0 1rem; gap: .25rem; }
+  .tab { flex: 1; padding: .65rem 0 .75rem; font-family: var(--mono); font-size: .8rem; font-weight: 700; letter-spacing: .1em;
+         text-transform: uppercase; color: #bdbdbd; border-bottom: 3px solid transparent; }
+  .tab[aria-selected="true"] { color: #fff; border-bottom-color: var(--orange); }
+
+  /* ---------- menü ---------- */
+  .menu { position: absolute; right: 1rem; top: 62px; background: #fff; color: var(--ink); min-width: 250px; z-index: 30;
+          border-top: 4px solid var(--orange); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .menu .who { padding: 1rem 1.1rem .75rem; border-bottom: 1px solid var(--line); }
+  .menu .who strong { display: block; }
+  .menu .who span { font-size: .85rem; color: var(--grey); }
+  .menu a, .menu button.item { display: block; width: 100%; text-align: left; padding: .8rem 1.1rem; color: var(--ink); text-decoration: none; }
+  .menu a:hover, .menu button.item:hover { background: var(--soft); }
+  .menu .admin { padding: .8rem 1.1rem; border-top: 1px solid var(--line); font-size: .9rem; }
+  .menu .admin label { display: block; color: var(--grey); margin-bottom: .35rem; }
+  .menu .admin .row { display: flex; gap: .5rem; }
+  .menu .admin input { flex: 1; padding: .45rem; border: 1px solid #bdbdbd; }
+
+  /* ---------- tartalom ---------- */
+  main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+  .daynav, .weeknav { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 1rem; }
+  .navbtn { width: 44px; height: 44px; border: 2px solid var(--black); display: grid; place-items: center; font-size: 1.25rem; flex: none; }
+  .navbtn:disabled { border-color: var(--line); color: var(--line); }
+  .daytitle { flex: 1; text-align: center; }
+  .daytitle h1 { font-size: 1.25rem; margin: 0; }
+  .daytitle p { margin: .1rem 0 0; font-family: var(--mono); font-size: .75rem; color: var(--grey); letter-spacing: .04em; }
+  .todaychip { display: inline-block; margin-top: .35rem; font-family: var(--mono); font-size: .7rem; font-weight: 700;
+               letter-spacing: .08em; text-transform: uppercase; color: var(--orange); border-bottom: 2px solid var(--orange); }
+
+  .banner { padding: .85rem 1rem; margin-bottom: 1rem; border-left: 5px solid var(--orange); background: var(--orange-soft); }
+  .banner.done { background: var(--black); color: #fff; font-weight: 700; display: flex; align-items: center; gap: .6rem; }
+  .banner.done .pray { font-size: 1.5rem; animation: pop .35s ease-out; }
+  .banner.muted { background: var(--soft); border-left-color: var(--grey-2); color: var(--grey); }
+  @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+  h2.section { font-family: var(--mono); font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--grey);
+               margin: 1.5rem 0 .5rem; display: flex; justify-content: space-between; }
+  .list { border-top: 1px solid var(--line); }
+
+  .task { display: flex; align-items: center; gap: .9rem; width: 100%; text-align: left; padding: .85rem .25rem; border-bottom: 1px solid var(--line); min-height: 64px; }
+  .task:disabled { opacity: .55; }
+  .box { width: 30px; height: 30px; border: 2px solid var(--black); flex: none; display: grid; place-items: center; transition: background .12s; }
+  .box svg { width: 18px; height: 18px; opacity: 0; transition: opacity .12s; }
+  .task.on .box { background: var(--orange); border-color: var(--orange); }
+  .task.on .box svg { opacity: 1; }
+  .task .txt { flex: 1; min-width: 0; }
+  .task .t { font-weight: 700; display: block; }
+  .task .s { font-size: .85rem; color: var(--grey); display: block; }
+  .badge { font-family: var(--mono); font-size: .72rem; font-weight: 700; padding: .25rem .5rem; border: 2px solid var(--line); white-space: nowrap; color: var(--grey); }
+  .badge.ok { border-color: var(--ok); color: var(--ok); }
+  .badge.part { border-color: var(--orange); color: var(--orange); }
+  .chev { font-size: 1.1rem; color: var(--grey); transition: transform .15s; }
+  .task[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .task.pending .box { animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+
+  .choices { background: var(--soft); border-bottom: 1px solid var(--line); padding: .25rem .75rem .75rem; }
+  .opt { display: flex; gap: .75rem; align-items: flex-start; width: 100%; text-align: left; padding: .6rem .25rem; border-bottom: 1px solid #ebe7e1; font-size: .95rem; }
+  .opt:last-of-type { border-bottom: 0; }
+  .opt .box { width: 24px; height: 24px; margin-top: .05rem; }
+  .opt .box svg { width: 14px; height: 14px; }
+  .opt.on .box { background: var(--orange); border-color: var(--orange); }
+  .opt.on .box svg { opacity: 1; }
+  .opt.on { font-weight: 500; }
+  .custom { margin-top: .75rem; }
+  .custom label { display: block; font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); margin-bottom: .35rem; }
+  .custom .row { display: flex; gap: .5rem; }
+  .custom input { flex: 1; min-width: 0; padding: .65rem .7rem; border: 1px solid #bdbdbd; background: #fff; }
+  .custom input:focus { border-color: var(--orange); outline: none; }
+  .mine { display: flex; gap: .6rem; align-items: center; background: #fff; border-left: 4px solid var(--orange); padding: .6rem .7rem; margin-top: .5rem; }
+  .mine span { flex: 1; }
+  .x { width: 32px; height: 32px; display: grid; place-items: center; font-size: 1.1rem; color: var(--grey); }
+
+  .btn { font-family: var(--mono); font-weight: 700; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
+         background: var(--orange); color: #fff; border: 2px solid var(--orange); padding: .65rem 1rem; }
+  .btn:hover { background: var(--black); border-color: var(--black); }
+  .btn.ghost { background: transparent; color: var(--black); border-color: var(--black); }
+  .btn.ghost:hover { background: var(--black); color: #fff; }
+
+  /* ---------- heti nézet ---------- */
+  .weekhead { text-align: center; flex: 1; }
+  .weekhead h1 { font-size: 1.25rem; margin: 0; }
+  .weekhead p { margin: .1rem 0 0; font-family: var(--mono); font-size: .75rem; color: var(--grey); }
+  .grid { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: .82rem; }
+  .grid th, .grid td { border-bottom: 1px solid var(--line); padding: .45rem 0; text-align: center; vertical-align: middle; }
+  .grid th.name, .grid td.name { text-align: left; width: 34%; padding-right: .4rem; font-weight: 500; line-height: 1.2; }
+  .grid td.name small { display: block; color: var(--grey); font-weight: 400; font-size: .72rem; }
+  .grid th.sum, .grid td.sum { width: 15%; }
+  .grid thead th { font-family: var(--mono); font-size: .68rem; color: var(--grey); font-weight: 700; }
+  .grid thead th button { width: 100%; padding: .2rem 0; line-height: 1.15; }
+  .grid thead th button b { display: block; font-size: .9rem; color: var(--ink); }
+  .grid thead th.today button b { color: var(--orange); }
+  .grid thead th.today { box-shadow: inset 0 -3px 0 var(--orange); }
+  .grid tr.group td { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); text-align: left; padding-top: 1rem; }
+  .dot { width: 20px; height: 20px; margin: 0 auto; border: 2px solid #d6d6d6; display: grid; place-items: center; font-family: var(--mono); font-size: .65rem; font-weight: 700; color: #fff; }
+  .dot.on { background: var(--orange); border-color: var(--orange); }
+  .dot.req { border-color: var(--grey); }
+  .dot.out { border-style: dashed; border-color: #ececec; }
+  .dot.na { border: 0; }
+  .dot.na::after { content: '–'; color: #cfcfcf; font-weight: 400; }
+  .pray-cell { font-size: 1rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .78rem; color: var(--grey); margin-top: 1rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .35rem; }
+  .legend .dot { width: 14px; height: 14px; margin: 0; }
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-bottom: 1rem; }
+  .stat { background: var(--soft); padding: .7rem .75rem; border-top: 4px solid var(--black); }
+  .stat b { display: block; font-family: var(--mono); font-size: 1.35rem; }
+  .stat span { font-size: .75rem; color: var(--grey); }
+
+  /* ---------- egyéb ---------- */
+  .center { text-align: center; padding: 3rem 1rem; }
+  .center h1 { font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+  .spinner { width: 36px; height: 36px; border: 4px solid var(--line); border-top-color: var(--orange); border-radius: 50%; margin: 1rem auto; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); background: var(--black); color: #fff; padding: .75rem 1rem;
+           border-left: 5px solid var(--orange); max-width: 92vw; z-index: 50; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  .toast.err { border-left-color: #e53935; }
+  .demo-flag { background: var(--orange); color: #fff; text-align: center; font-family: var(--mono); font-size: .72rem; padding: .3rem; letter-spacing: .08em; }
+  footer.foot { background: var(--black); color: #9a9a9a; border-bottom: 8px solid var(--orange); padding: 1.25rem 1rem; text-align: center; font-size: .8rem; }
+  footer.foot a { color: #fff; }
+  /* ---------- táblázatos nézet ---------- */
+  main.wide { max-width: none; padding-left: 0; padding-right: 0; }
+  .tbl-hint { max-width: 760px; margin: 0 auto .75rem; padding: 0 1rem; font-size: .85rem; color: var(--grey); }
+  .tbl-wrap { overflow: auto; max-height: calc(100vh - 160px); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); overscroll-behavior: contain; }
+  .tbl { border-collapse: separate; border-spacing: 0; font-size: .8rem; }
+  .tbl th, .tbl td { border-bottom: 1px solid var(--line); text-align: center; padding: 4px 3px; background: #fff; }
+  .tbl thead th { position: sticky; background: var(--black); color: #fff; z-index: 2; border-bottom: 0; }
+  .tbl thead tr:first-child th { top: 0; height: 34px; }
+  .tbl thead tr:nth-child(2) th { top: 34px; }
+  .tbl .corner { left: 0; z-index: 4; text-align: left; padding-left: 12px; font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: #bdbdbd; border-right: 2px solid var(--orange); }
+  .tbl th.rowname { position: sticky; left: 0; z-index: 1; text-align: left; min-width: 120px; max-width: 130px; font-weight: 700; font-size: .78rem; padding: 6px 8px 6px 10px; line-height: 1.2; border-right: 2px solid var(--line); }
+  @media (min-width: 640px) { .tbl th.rowname { min-width: 165px; max-width: 180px; font-size: .85rem; padding-left: 14px; } }
+  .tbl th.rowname small { display: block; font-weight: 400; color: var(--grey); font-size: .7rem; margin-top: 2px; }
+  .tbl thead .wk { font-family: var(--mono); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: left; padding-left: 8px; border-left: 3px solid var(--orange); }
+  .tbl thead .wk span { color: var(--orange); }
+  .tbl thead .wk em { font-style: normal; font-weight: 400; color: #9a9a9a; text-transform: none; letter-spacing: 0; margin-left: .35rem; }
+  .tbl thead .dh button { color: #9a9a9a; font-family: var(--mono); font-size: .62rem; line-height: 1.1; padding: 2px 0 4px; width: 36px; }
+  .tbl thead .dh b { display: block; color: #fff; font-size: .72rem; }
+  .tbl thead .dh.today { box-shadow: inset 0 -4px 0 var(--orange); }
+  .tbl thead .dh.today b { color: var(--orange); }
+  .tbl thead .sig { background: #222; color: var(--orange); font-family: var(--mono); }
+  .tbl td.sig { background: var(--soft); font-family: var(--mono); font-weight: 700; font-size: .75rem; min-width: 54px; border-right: 3px solid var(--black); white-space: nowrap; }
+  .tbl td.today { background: var(--orange-soft); }
+  .tbl td.na { color: #cfcfcf; background: #fafafa; }
+  .tbl tr.grp th, .tbl tr.grp td { background: var(--soft); font-family: var(--mono); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); text-align: left; padding: 10px 12px 6px; }
+  .tbl tr.pray td { font-size: .95rem; }
+  .tbl tr.pray th.rowname { color: var(--orange); }
+  .tbl .badge { font-size: .64rem; padding: .12rem .3rem; border-width: 2px; }
+  .cb { width: 28px; height: 28px; border: 2px solid var(--black); display: grid; place-items: center; margin: 0 auto; background: #fff; }
+  .cb svg { width: 15px; height: 15px; opacity: 0; }
+  .cb i { font-style: normal; font-family: var(--mono); font-weight: 700; font-size: .75rem; color: #fff; }
+  .cb.on { background: var(--orange); border-color: var(--orange); }
+  .cb.on svg { opacity: 1; }
+  .cb.optday:not(.on) { border-style: dashed; border-color: #b0b0b0; }
+  .cb:disabled { border-color: #e6e6e6; background: #fafafa; }
+  .cb.pending { animation: pulse 1s infinite; }
+  .cbx { width: 14px; height: 14px; border: 2px solid var(--black); display: inline-block; }
+  .cbx.on { background: var(--orange); border-color: var(--orange); }
+  .cbx.optday { border-style: dashed; border-color: #b0b0b0; }
+  .tbl-legend { max-width: 760px; margin: 1rem auto 0; padding: 0 1rem; }
+
+  /* ---------- felugró választó (táblázatból) ---------- */
+  body.noscroll { overflow: hidden; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet { background: #fff; width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column; border-top: 6px solid var(--orange); animation: up .18s ease-out; }
+  @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet-head { display: flex; align-items: flex-start; gap: .75rem; padding: 1rem 1rem .75rem; border-bottom: 1px solid var(--line); }
+  .sheet-head div { flex: 1; }
+  .sheet-head strong { display: block; font-size: 1.1rem; }
+  .sheet-head span { font-size: .85rem; color: var(--grey); }
+  .sheet .choices { overflow: auto; flex: 1; border-bottom: 0; }
+  .sheet-foot { padding: .75rem 1rem; border-top: 1px solid var(--line); text-align: right; }
+  @media (min-width: 640px) { .overlay { align-items: center; } }
+
+  @media (min-width: 640px) {
+    .grid { font-size: .9rem; }
+    .dot { width: 24px; height: 24px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"><div class="center"><div class="spinner"></div></div></div>
+
+<script>
+// =====================================================================
+//  BEÁLLÍTÁSOK
+// =====================================================================
+const CONFIG = {
+  ORCHARD: 'https://szakszentandrskr.dotnest.net',
+  CLIENT_ID: 'szak-kovetes',
+  SUPABASE_URL: 'https://vnxpaiylghosiumyroep.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_EDrvUjcW8am6Ebg351x6nA_oGUoKv3N',   // nyilvános kulcs, böngészőbe szánva
+  EXCHANGE_FN: '/functions/v1/orchard-exchange',
+  CHALLENGE_ID: 'szak-2027',
+  SITE_URL: 'https://szakszentandrskr.dotnest.net/',
+};
+const REDIRECT_URI = location.origin + location.pathname;
+const DEMO = new URLSearchParams(location.search).has('demo');
+
+// =====================================================================
+//  SEGÉDEK
+// =====================================================================
+const $app = document.getElementById('app');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, area = localStorage) { try { return JSON.parse(area.getItem(k)); } catch { return null; } },
+  set(k, v, area = localStorage) { try { area.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k, area = localStorage) { try { area.removeItem(k); } catch {} },
+};
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="square"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+
+// Dátumok – mindig helyi idő szerint, 'ÉÉÉÉ-HH-NN' formában
+const pad = (n) => String(n).padStart(2, '0');
+const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseYmd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const diffDays = (a, b) => Math.round((parseYmd(a) - parseYmd(b)) / 86400000);
+const isoWeekday = (s) => ((parseYmd(s).getDay() + 6) % 7) + 1;    // 1 = hétfő
+const todayYmd = () => ymd(new Date());
+const WD_SHORT = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
+const fmtLong = (s) => {
+  const d = parseYmd(s);
+  const wd = new Intl.DateTimeFormat('hu-HU', { weekday: 'long' }).format(d);
+  return wd.charAt(0).toUpperCase() + wd.slice(1) + ', ' + new Intl.DateTimeFormat('hu-HU', { month: 'long', day: 'numeric' }).format(d);
+};
+const fmtShort = (s) => new Intl.DateTimeFormat('hu-HU', { month: 'short', day: 'numeric' }).format(parseYmd(s));
+
+function toast(msg, isErr = false) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.setAttribute('role', 'status');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), isErr ? 6000 : 2500);
+}
+
+// =====================================================================
+//  BELÉPÉS: Orchard (PKCE) → orchard-exchange → Supabase-token
+// =====================================================================
+const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const randomString = () => b64url(crypto.getRandomValues(new Uint8Array(32)));
+const sha256 = async (t) => b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)));
+
+function loadSession() {
+  const s = store.get('szak_session');
+  return s && s.access_token && s.expires_at * 1000 > Date.now() + 60000 ? s : null;
+}
+
+async function startLogin() {
+  // Végtelen átirányítás elleni védelem
+  const tries = (store.get('szak_login_tries', sessionStorage) || []).filter(t => Date.now() - t < 120000);
+  if (tries.length >= 3) {
+    renderError('A belépés többször egymás után nem sikerült.', 'Próbáld újra pár perc múlva, vagy jelezd a szervezőknek.');
+    return;
+  }
+  store.set('szak_login_tries', [...tries, Date.now()], sessionStorage);
+  const verifier = randomString(), state = randomString();
+  store.set('szak_pkce', { verifier, state, view: S.view, day: S.day }, sessionStorage);
+  const url = new URL(CONFIG.ORCHARD + '/connect/authorize');
+  url.search = new URLSearchParams({
+    response_type: 'code', client_id: CONFIG.CLIENT_ID, redirect_uri: REDIRECT_URI, scope: 'openid profile email',
+    state, code_challenge: await sha256(verifier), code_challenge_method: 'S256',
+  });
+  renderSplash('Átirányítás a SZAK belépéshez…');
+  location.href = url.toString();
+}
+
+async function finishLogin(params) {
+  const pkce = store.get('szak_pkce', sessionStorage);
+  history.replaceState(null, '', REDIRECT_URI);
+  if (params.get('error')) throw new Error('Az Orchard hibát adott: ' + (params.get('error_description') || params.get('error')));
+  if (!pkce || params.get('state') !== pkce.state) throw new Error('A belépés ellenőrzése nem sikerült (state). Próbáld újra.');
+  renderSplash('Belépés…');
+  const tr = await fetch(CONFIG.ORCHARD + '/connect/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'authorization_code', code: params.get('code'), redirect_uri: REDIRECT_URI,
+                                client_id: CONFIG.CLIENT_ID, code_verifier: pkce.verifier }),
+  });
+  const tok = await tr.json().catch(() => ({}));
+  if (!tr.ok || !tok.access_token) throw new Error('Az Orchard nem adott belépési tokent (' + (tok.error || tr.status) + ').');
+  const xr = await fetch(CONFIG.SUPABASE_URL + CONFIG.EXCHANGE_FN, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orchard_token: tok.access_token }),
+  });
+  const x = await xr.json().catch(() => ({}));
+  if (!xr.ok || !x.ok) throw new Error('A belépés ellenőrzése nem sikerült: ' + (x.error || x.stage || xr.status));
+  store.del('szak_pkce', sessionStorage);
+  store.del('szak_login_tries', sessionStorage);
+  const session = { access_token: x.access_token, expires_at: x.expires_at, profile: x.profile, id_token: tok.id_token || null };
+  store.set('szak_session', session);
+  return { session, restore: pkce };
+}
+
+function logout() {
+  const s = store.get('szak_session');
+  store.del('szak_session');
+  const url = new URL(CONFIG.ORCHARD + '/connect/logout');
+  if (s && s.id_token) url.search = new URLSearchParams({ id_token_hint: s.id_token, post_logout_redirect_uri: REDIRECT_URI });
+  location.href = DEMO ? REDIRECT_URI : url.toString();
+}
+
+// =====================================================================
+//  ADATELÉRÉS (Supabase REST) – demó módban memóriában
+// =====================================================================
+class AuthExpired extends Error {}
+
+async function api(path, { method = 'GET', body, prefer } = {}) {
+  if (!S.session || S.session.expires_at * 1000 < Date.now() + 30000) throw new AuthExpired();
+  const headers = { apikey: CONFIG.SUPABASE_KEY, Authorization: 'Bearer ' + S.session.access_token };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (prefer) headers.Prefer = prefer;
+  const r = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/' + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (r.status === 401) throw new AuthExpired();
+  const text = await r.text();
+  if (!r.ok) { const e = new Error(r.status + ' ' + text.slice(0, 200)); e.status = r.status; throw e; }
+  return text ? JSON.parse(text) : null;
+}
+
+const DB = {
+  async loadAll() {
+    if (DEMO) return demoLoad();
+    const [settings, tasks, options] = await Promise.all([
+      api('challenge_settings?select=id,title,start_date,days&id=eq.' + encodeURIComponent(CONFIG.CHALLENGE_ID)),
+      api('tasks?select=*&active=eq.true&order=sort'),
+      api('task_options?select=id,task_key,label,sort&active=eq.true&order=task_key,sort'),
+    ]);
+    if (!settings.length) throw new Error('Nincs beállítva a kihívás (' + CONFIG.CHALLENGE_ID + ').');
+    const st = settings[0];
+    const end = addDays(st.start_date, st.days - 1);
+    const entries = await api('entries?select=id,day,task_key,option_id,custom_text&day=gte.' + st.start_date + '&day=lte.' + end);
+    return { settings: st, tasks, options, entries };
+  },
+  async add(row) {
+    if (DEMO) return { id: ++demoSeq, option_id: null, custom_text: null, ...row };
+    const res = await api('entries?select=id,day,task_key,option_id,custom_text', { method: 'POST', body: row, prefer: 'return=representation' });
+    return res[0];
+  },
+  async remove(id) {
+    if (DEMO) return;
+    await api('entries?id=eq.' + id, { method: 'DELETE' });
+  },
+  async setStartDate(date) {
+    if (DEMO) { S.settings.start_date = date; return; }
+    const res = await api('challenge_settings?id=eq.' + encodeURIComponent(S.settings.id), { method: 'PATCH', body: { start_date: date }, prefer: 'return=representation' });
+    if (!res || !res.length) throw new Error('Nincs jogosultságod a kezdődátum módosításához.');
+  },
+};
+
+// ---------- demó adatok ----------
+const DEMO_DATA = {"tasks": [{"key": "elmelkedes", "pillar": 1, "pillar_name": "Elmélkedés", "title": "Elmélkedés", "description": "Napi rövid olvasmány és 15 perc elmélkedés róla.", "kind": "daily_check", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 10, "active": true}, {"key": "ima", "pillar": 2, "pillar_name": "Imádság", "title": "Napi ima", "description": "A napi egyéni ima elimádkozása.", "kind": "daily_check", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 20, "active": true}, {"key": "alkoholmentes", "pillar": 3, "pillar_name": "Testi", "title": "Alkoholmentes nap", "description": "Teljes alkoholmentesség.", "kind": "daily_check", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 30, "active": true}, {"key": "husmentes", "pillar": 3, "pillar_name": "Testi", "title": "Húsmentes nap", "description": "Minimum szerdától péntekig; aki vállalja, minden nap.", "kind": "daily_check", "weekly_min": null, "required_weekdays": [3, 4, 5], "active_weeks": null, "week_labels": null, "sort": 40, "active": true}, {"key": "lelki", "pillar": 4, "pillar_name": "Lelki", "title": "Lelki feladat", "description": "Teljesíts minden nap legalább egyet!", "kind": "daily_choice", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 50, "active": true}, {"key": "kapcsolati", "pillar": 5, "pillar_name": "Kapcsolati", "title": "Kapcsolati feladat", "description": "Minden nap válassz ki legalább egyet!", "kind": "daily_choice", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 60, "active": true}, {"key": "teremtesvedelem", "pillar": 6, "pillar_name": "Teremtésvédelmi", "title": "Teremtésvédelmi feladat", "description": "Teljesíts naponta legalább egyet!", "kind": "daily_choice", "weekly_min": null, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 70, "active": true}, {"key": "hidegzuhany", "pillar": 3, "pillar_name": "Testi", "title": "Hideg zuhany", "description": "Péntekenként; plusz napok is vállalhatók.", "kind": "weekly", "weekly_min": 1, "required_weekdays": [5], "active_weeks": null, "week_labels": null, "sort": 110, "active": true}, {"key": "digitalis_bojt", "pillar": 3, "pillar_name": "Testi", "title": "Digitális böjt", "description": "Heti legalább 1 nap: telefon, laptop, tv csak munkára, családi ügyre.", "kind": "weekly", "weekly_min": 1, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 120, "active": true}, {"key": "edzes", "pillar": 3, "pillar_name": "Testi", "title": "Edzés", "description": "Heti 3× fél óra, a saját fizikai állapotod szerint.", "kind": "weekly", "weekly_min": 3, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 130, "active": true}, {"key": "kozos_ima", "pillar": 2, "pillar_name": "Imádság", "title": "Közös ima / szertartás", "description": "Heti legalább egy, a lelkipásztorod útmutatása szerint.", "kind": "weekly", "weekly_min": 1, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 140, "active": true}, {"key": "szaktars_hivas", "pillar": 7, "pillar_name": "SZAK-társ", "title": "SZAK-társ kapcsolódás", "description": "Heti legalább egy beszélgetés egy SZAK-társsal a heti böjtről.", "kind": "weekly", "weekly_min": 1, "required_weekdays": null, "active_weeks": null, "week_labels": null, "sort": 150, "active": true}, {"key": "extra", "pillar": null, "pillar_name": "Extra", "title": "Extra challenge", "description": "A páros heteken.", "kind": "weekly", "weekly_min": 1, "required_weekdays": null, "active_weeks": [2, 4, 6], "week_labels": {"2": "Duplabandi", "4": "Éhesbandi", "6": "Triplabandi"}, "sort": 160, "active": true}], "options": [{"id": 1, "task_key": "lelki", "label": "Elmondtam érte egy imát – bár ő nem szólt hozzám szépen.", "sort": 10}, {"id": 2, "task_key": "lelki", "label": "Elmentem egy szertartásra – bár lustálkodhattam is volna.", "sort": 20}, {"id": 3, "task_key": "lelki", "label": "Szentírást olvastam – közösségi oldalak helyett.", "sort": 30}, {"id": 4, "task_key": "lelki", "label": "Munkába menet munkatársa(i)mért imádkoztam.", "sort": 40}, {"id": 5, "task_key": "lelki", "label": "Hálát adtam – pedig abban a pillanatban nem esett jól, amit kaptam.", "sort": 50}, {"id": 6, "task_key": "lelki", "label": "A mai böjtöt érte ajánlottam fel – mert sok a bajom vele.", "sort": 60}, {"id": 7, "task_key": "lelki", "label": "Végre meggyóntam – pedig sokáig halogattam.", "sort": 70}, {"id": 8, "task_key": "lelki", "label": "Részt vettem egy nagyböjti szertartáson – pedig hosszúnak gondoltam.", "sort": 80}, {"id": 9, "task_key": "lelki", "label": "Elhunytjaimért imádkoztam – mert már rég nem gondoltam rájuk.", "sort": 90}, {"id": 10, "task_key": "lelki", "label": "Lelki olvasmányt olvastam – bár mást is elővehettem volna.", "sort": 100}, {"id": 11, "task_key": "kapcsolati", "label": "Nem mondtam ki – bár igazam volt, de nem vált volna épülésre.", "sort": 10}, {"id": 12, "task_key": "kapcsolati", "label": "Adományt adtam neki – bár nem biztos, hogy jól használja fel.", "sort": 20}, {"id": 13, "task_key": "kapcsolati", "label": "Nem kapcsoltam be – bár nagyon szerettem volna megnézni.", "sort": 30}, {"id": 14, "task_key": "kapcsolati", "label": "Megtettem – bár nem az én dolgom lett volna.", "sort": 40}, {"id": 15, "task_key": "kapcsolati", "label": "Megöleltem – bár lett volna okom veszekedni is vele.", "sort": 50}, {"id": 16, "task_key": "kapcsolati", "label": "Megbocsátottam neki – anélkül, hogy kérte volna.", "sort": 60}, {"id": 17, "task_key": "kapcsolati", "label": "A házimunkában vettem részt.", "sort": 70}, {"id": 18, "task_key": "kapcsolati", "label": "Megleptem egy aprósággal – mert őt szeretem, fontos nekem.", "sort": 80}, {"id": 19, "task_key": "kapcsolati", "label": "Elfogadtam a véleményét – pedig én teljesen mást gondolok erről.", "sort": 90}, {"id": 20, "task_key": "kapcsolati", "label": "Meglátogattam – pedig elfoglalt voltam, de neki ez jól esett.", "sort": 100}, {"id": 21, "task_key": "kapcsolati", "label": "Végighallgattam – bár nem volt kedvem hozzá.", "sort": 110}, {"id": 22, "task_key": "kapcsolati", "label": "Segítettem a gyerekemnek egy hétköznapon (de nem oldottam meg helyette).", "sort": 120}, {"id": 23, "task_key": "kapcsolati", "label": "Felhívtam – pedig ő nem hívott már hetek óta.", "sort": 130}, {"id": 24, "task_key": "kapcsolati", "label": "Játszottam a gyerekemmel.", "sort": 140}, {"id": 25, "task_key": "kapcsolati", "label": "Adtam neki még egy esélyt – pedig már sokat eljátszott.", "sort": 150}, {"id": 26, "task_key": "kapcsolati", "label": "Megvigasztaltam – bár nekem is vigaszra lett volna szükségem.", "sort": 160}, {"id": 27, "task_key": "kapcsolati", "label": "Békejobbot nyújtottam – pedig neki kellett volna.", "sort": 170}, {"id": 28, "task_key": "kapcsolati", "label": "Elvállaltam – pedig más is megtehette volna.", "sort": 180}, {"id": 29, "task_key": "kapcsolati", "label": "Nem mondtam el egy pletykát – pedig esett volna.", "sort": 190}, {"id": 30, "task_key": "kapcsolati", "label": "Megköszöntem – pedig nem szépen szólt hozzám.", "sort": 200}, {"id": 31, "task_key": "kapcsolati", "label": "Jót mondtam róla – pedig ő nem így tett legutóbb.", "sort": 210}, {"id": 32, "task_key": "kapcsolati", "label": "Odaadtam – pedig magamnak szerettem volna.", "sort": 220}, {"id": 33, "task_key": "kapcsolati", "label": "Végighallgattam a gyerekem, feleségem napját.", "sort": 230}, {"id": 34, "task_key": "kapcsolati", "label": "Nem tettem meg – pedig akartam, de tudtam, nem származik belőle jó.", "sort": 240}, {"id": 35, "task_key": "kapcsolati", "label": "Végre megtettem – pedig sokáig halogattam.", "sort": 250}, {"id": 36, "task_key": "kapcsolati", "label": "Időben kikapcsoltam – mert tudom, nem vált volna épülésemre.", "sort": 260}, {"id": 37, "task_key": "kapcsolati", "label": "Kedves voltam hozzá – bár nem volt jó kedvem.", "sort": 270}, {"id": 38, "task_key": "kapcsolati", "label": "Elpakoltam.", "sort": 280}, {"id": 39, "task_key": "kapcsolati", "label": "Nem panaszkodtam neki – pedig ma különösen lett volna rá okom.", "sort": 290}, {"id": 40, "task_key": "kapcsolati", "label": "Megajándékoztam magam egy kis építő csönddel.", "sort": 300}, {"id": 41, "task_key": "kapcsolati", "label": "Komolyabb adománnyal támogattam egy nemes ügyet – ők jobban rászorulnak.", "sort": 310}, {"id": 42, "task_key": "kapcsolati", "label": "Sikerült minimum 20 percet beszélgetni egy családtagommal.", "sort": 320}, {"id": 43, "task_key": "kapcsolati", "label": "Közös programot szerveztem a családommal.", "sort": 330}, {"id": 44, "task_key": "kapcsolati", "label": "Joker: nem is gondoltam volna, hogy lelki javamra válik.", "sort": 340}, {"id": 45, "task_key": "teremtesvedelem", "label": "Nem veszem meg – mert nincs szükségem rá.", "sort": 10}, {"id": 46, "task_key": "teremtesvedelem", "label": "Gyalogoltam – bár kocsival is mehettem volna.", "sort": 20}, {"id": 47, "task_key": "teremtesvedelem", "label": "Nem kapcsoltam be feleslegesen.", "sort": 30}, {"id": 48, "task_key": "teremtesvedelem", "label": "Csomagolásmentes terméket vásároltam.", "sort": 40}, {"id": 49, "task_key": "teremtesvedelem", "label": "Kikapcsoltam (standby mód helyett).", "sort": 50}, {"id": 50, "task_key": "teremtesvedelem", "label": "Kihúztam a töltőt, mikor nem használom.", "sort": 60}, {"id": 51, "task_key": "teremtesvedelem", "label": "Csapvizet ittam – palackos helyett.", "sort": 70}, {"id": 52, "task_key": "teremtesvedelem", "label": "Saját kulacsot használok műanyag palack helyett.", "sort": 80}, {"id": 53, "task_key": "teremtesvedelem", "label": "Saját táskát vittem a bevásárláshoz.", "sort": 90}, {"id": 54, "task_key": "teremtesvedelem", "label": "Sétáltam egyet az erdőben.", "sort": 100}, {"id": 55, "task_key": "teremtesvedelem", "label": "Tegnapról megmaradt maradékot ettem meg, pedig frisset kívántam.", "sort": 110}, {"id": 56, "task_key": "teremtesvedelem", "label": "Helyi termelőktől vásároltam.", "sort": 120}, {"id": 57, "task_key": "teremtesvedelem", "label": "A használt étolajat elvittem a gyűjtőpontra.", "sort": 130}, {"id": 58, "task_key": "teremtesvedelem", "label": "1 óra (vagy több) eltöltése pusztán a teremtett világot szemlélve.", "sort": 140}, {"id": 59, "task_key": "teremtesvedelem", "label": "Kisebb lomtalanítás: felismertem, mik a felesleges kacatok otthon.", "sort": 150}]};
+let demoSeq = 1000;
+function demoLoad() {
+  // a demó kihívás a 9 nappal ezelőtti hét hétfőjén indul, ahogy az élesben is
+  const nineAgo = addDays(todayYmd(), -9);
+  const start = addDays(nineAgo, -(isoWeekday(nineAgo) - 1));
+  const settings = { id: 'demo', title: 'Szent András Kihívás (demó)', start_date: start, days: 40 };
+  const entries = [];
+  const add = (day, task_key, extra = {}) => entries.push({ id: ++demoSeq, day, task_key, option_id: null, custom_text: null, ...extra });
+  const opts = (k) => DEMO_DATA.options.filter(o => o.task_key === k);
+  for (let i = 0; i < diffDays(todayYmd(), start); i++) {
+    const d = addDays(start, i), wd = isoWeekday(d);
+    add(d, 'elmelkedes'); if (i % 4 !== 2) add(d, 'ima'); add(d, 'alkoholmentes');
+    if (wd >= 3 && wd <= 5) add(d, 'husmentes');
+    add(d, 'lelki', { option_id: opts('lelki')[i % 10].id });
+    if (i !== 5) add(d, 'kapcsolati', { option_id: opts('kapcsolati')[(i * 3) % 34].id });
+    add(d, 'teremtesvedelem', { option_id: opts('teremtesvedelem')[(i * 2) % 15].id });
+    if (wd === 5 || i === 1 || i === 3) add(d, 'hidegzuhany');
+    if (wd === 7) add(d, 'digitalis_bojt');
+    if (i % 2 === 0) add(d, 'edzes');
+    if (wd === 3) add(d, 'szaktars_hivas');
+    if (wd === 7) add(d, 'kozos_ima');
+  }
+  add(addDays(start, 2), 'kapcsolati', { custom_text: 'Elvittem anyát orvoshoz.' });
+  return { settings, tasks: DEMO_DATA.tasks, options: DEMO_DATA.options, entries };
+}
+
+// =====================================================================
+//  ÁLLAPOT ÉS SZÁMÍTÁSOK
+// =====================================================================
+const S = {
+  session: null, profile: null, settings: null, tasks: [], options: {}, entries: [],
+  view: 'day', day: null, open: null, menu: false, pending: new Set(), loaded: false,
+  sheet: null, lastView: null, scrollToday: false,
+};
+
+const dayIndex = (d) => diffDays(d, S.settings.start_date);           // 0-tól
+const weekNo = (d) => Math.floor(dayIndex(d) / 7) + 1;               // 1-től
+const lastDay = () => addDays(S.settings.start_date, S.settings.days - 1);
+const inRange = (d) => dayIndex(d) >= 0 && dayIndex(d) < S.settings.days;
+const isFuture = (d) => !DEMO && d > todayYmd();
+const weekCount = () => Math.ceil(S.settings.days / 7);
+const weekDays = (w) => Array.from({ length: 7 }, (_, i) => addDays(S.settings.start_date, (w - 1) * 7 + i));
+
+const dailyTasks = () => S.tasks.filter(t => t.kind !== 'weekly');
+const weeklyTasks = (w) => S.tasks.filter(t => t.kind === 'weekly' && (!t.active_weeks || t.active_weeks.includes(w)));
+const entriesOf = (d, key) => S.entries.filter(e => e.day === d && e.task_key === key);
+const plainEntry = (d, key) => S.entries.find(e => e.day === d && e.task_key === key && e.option_id == null && e.custom_text == null);
+const optionEntry = (d, key, optId) => S.entries.find(e => e.day === d && e.task_key === key && e.option_id === optId);
+const customEntry = (d, key) => S.entries.find(e => e.day === d && e.task_key === key && e.custom_text != null);
+
+function isRequired(t, d) {
+  return !(t.required_weekdays && t.required_weekdays.length && !t.required_weekdays.includes(isoWeekday(d)));
+}
+function taskDone(t, d) {
+  return t.kind === 'daily_choice' ? entriesOf(d, t.key).length > 0 : !!plainEntry(d, t.key);
+}
+function dayStatus(d) {
+  const req = dailyTasks().filter(t => isRequired(t, d));
+  const done = req.filter(t => taskDone(t, d)).length;
+  return { done, total: req.length, complete: req.length > 0 && done === req.length };
+}
+function weeklyStatus(t, w) {
+  const days = weekDays(w).filter(inRange);
+  const count = days.filter(d => plainEntry(d, t.key)).length;
+  const min = t.weekly_min || 1;
+  return { count, min, ok: count >= min, extra: Math.max(0, count - min) };
+}
+function weeklyBadge(t, w) {
+  const s = weeklyStatus(t, w);
+  if (s.ok) return '<span class="badge ok">✔' + (s.extra ? ' +' + s.extra : '') + '</span>';
+  return '<span class="badge' + (s.count ? ' part' : '') + '">' + s.count + '/' + s.min + '</span>';
+}
+function weeklyTitle(t, w) {
+  const lbl = t.week_labels && t.week_labels[String(w)];
+  return lbl ? t.title + ': ' + lbl : t.title;
+}
+
+// =====================================================================
+//  MŰVELETEK
+// =====================================================================
+async function mutate(key, fn) {
+  if (S.pending.has(key)) return;
+  S.pending.add(key); render();
+  try { await fn(); }
+  catch (e) { await handleError(e); }
+  finally { S.pending.delete(key); render(); }
+}
+
+async function handleError(e) {
+  if (e instanceof AuthExpired) {
+    if (DEMO) return;
+    store.del('szak_session');
+    toast('A belépés lejárt, újra belépünk…');
+    setTimeout(startLogin, 800);
+    return;
+  }
+  if (e.status === 409) { toast('Ez már el volt mentve – frissítem az adatokat.'); await reload(); return; }
+  console.error(e);
+  toast('Nem sikerült menteni. Ellenőrizd a netkapcsolatot, és próbáld újra.', true);
+}
+
+async function reload() {
+  try {
+    const data = await DB.loadAll();
+    applyData(data);
+  } catch (e) { await handleError(e); }
+}
+
+function toggleCheck(taskKey, d) {
+  return mutate(taskKey + d, async () => {
+    const ex = plainEntry(d, taskKey);
+    if (ex) { await DB.remove(ex.id); S.entries = S.entries.filter(e => e.id !== ex.id); }
+    else { const row = await DB.add({ day: d, task_key: taskKey }); S.entries.push(row); }
+  });
+}
+function toggleOption(taskKey, optId, d) {
+  return mutate(taskKey + d + 'o' + optId, async () => {
+    const ex = optionEntry(d, taskKey, optId);
+    if (ex) { await DB.remove(ex.id); S.entries = S.entries.filter(e => e.id !== ex.id); }
+    else { const row = await DB.add({ day: d, task_key: taskKey, option_id: optId }); S.entries.push(row); }
+  });
+}
+function saveCustom(taskKey, d, text) {
+  text = text.trim().slice(0, 200);
+  if (!text) return;
+  return mutate(taskKey + d + 'c', async () => {
+    const ex = customEntry(d, taskKey);
+    if (ex) { await DB.remove(ex.id); S.entries = S.entries.filter(e => e.id !== ex.id); }
+    const row = await DB.add({ day: d, task_key: taskKey, custom_text: text });
+    S.entries.push(row);
+  });
+}
+function removeCustom(taskKey, d) {
+  return mutate(taskKey + d + 'c', async () => {
+    const ex = customEntry(d, taskKey);
+    if (ex) { await DB.remove(ex.id); S.entries = S.entries.filter(e => e.id !== ex.id); }
+  });
+}
+
+// =====================================================================
+//  MEGJELENÍTÉS
+// =====================================================================
+function renderSplash(msg) {
+  $app.innerHTML = '<div class="center"><h1>SZAK</h1><div class="spinner"></div><p>' + esc(msg) + '</p></div>';
+}
+function renderError(title, detail) {
+  $app.innerHTML = '<div class="center"><h1>Hoppá</h1><p><strong>' + esc(title) + '</strong></p>' +
+    (detail ? '<p>' + esc(detail) + '</p>' : '') +
+    '<p><button class="btn" data-act="login">Belépés újra</button></p>' +
+    '<p><a href="' + esc(CONFIG.SITE_URL) + '">Vissza a SZAK oldalra</a></p></div>';
+}
+
+function header() {
+  const p = S.profile || {};
+  const initial = (p.display_name || '?').trim().charAt(0) || '?';
+  return (DEMO ? '<div class="demo-flag">DEMÓ – az adatok nem mentődnek</div>' : '') +
+    '<header class="top"><div class="top-inner">' +
+      '<div class="brand">SZAK Követő<small>' + esc(S.settings.title) + '</small></div>' +
+      '<button class="avatar" data-act="menu" aria-haspopup="true" aria-expanded="' + S.menu + '" aria-label="Menü">' + esc(initial) + '</button>' +
+    '</div>' +
+    '<nav class="tabs" role="tablist">' +
+      '<button class="tab" role="tab" aria-selected="' + (S.view === 'day') + '" data-act="view" data-v="day">Nap</button>' +
+      '<button class="tab" role="tab" aria-selected="' + (S.view === 'week') + '" data-act="view" data-v="week">Hét</button>' +
+      '<button class="tab" role="tab" aria-selected="' + (S.view === 'table') + '" data-act="view" data-v="table">Táblázat</button>' +
+    '</nav>' + (S.menu ? menu() : '') + '</header>';
+}
+
+function menu() {
+  const p = S.profile || {};
+  return '<div class="menu" role="menu">' +
+    '<div class="who"><strong>' + esc(p.display_name || 'SZAK-társ') + '</strong><span>' + (p.is_admin ? 'admin' : 'résztvevő') + '</span></div>' +
+    '<a href="' + esc(CONFIG.SITE_URL) + '" role="menuitem">Vissza a SZAK oldalra</a>' +
+    '<button class="item" data-act="logout" role="menuitem">Kijelentkezés</button>' +
+    (p.is_admin ? '<div class="admin"><label for="startDate">Kezdődátum (admin)</label><div class="row">' +
+      '<input id="startDate" type="date" value="' + esc(S.settings.start_date) + '">' +
+      '<button class="btn" data-act="setstart">Mentés</button></div></div>' : '') +
+    '</div>';
+}
+
+function taskRow(t, d, extraRight = '', titleOverride = null) {
+  const on = !!plainEntry(d, t.key);
+  const pend = S.pending.has(t.key + d);
+  const locked = isFuture(d);
+  let sub = t.pillar_name === t.title ? (t.description || '') : t.pillar_name;
+  if (t.required_weekdays && t.required_weekdays.length) {
+    if (t.kind === 'weekly') { if (isRequired(t, d)) sub += ' · ma esedékes'; }
+    else sub += isRequired(t, d) ? ' · ma kötelező' : ' · ma önkéntes';
+  }
+  return '<button class="task' + (on ? ' on' : '') + (pend ? ' pending' : '') + '" data-act="check" data-task="' + esc(t.key) + '"' +
+    ' aria-pressed="' + on + '"' + (locked ? ' disabled' : '') + '>' +
+    '<span class="box">' + CHECK_SVG + '</span>' +
+    '<span class="txt"><span class="t">' + esc(titleOverride || t.title) + '</span><span class="s">' + esc(sub) + '</span></span>' +
+    extraRight + '</button>';
+}
+
+function choiceRow(t, d) {
+  const list = S.options[t.key] || [];
+  const chosen = entriesOf(d, t.key);
+  const open = S.open === t.key;
+  const locked = isFuture(d);
+  const badge = chosen.length
+    ? '<span class="badge ok">' + chosen.length + ' ✔</span>'
+    : '<span class="badge">0</span>';
+  let html = '<button class="task' + (chosen.length ? ' on' : '') + '" data-act="toggleopen" data-task="' + esc(t.key) + '"' +
+    ' aria-expanded="' + open + '"' + (locked ? ' disabled' : '') + '>' +
+    '<span class="box">' + CHECK_SVG + '</span>' +
+    '<span class="txt"><span class="t">' + esc(t.title) + '</span><span class="s">' + esc(t.description || t.pillar_name) + '</span></span>' +
+    badge + '<span class="chev" aria-hidden="true">▾</span></button>';
+  if (open && !locked) html += '<div class="choices">' + choiceList(t, d) + '</div>';
+  return html;
+}
+
+// A listás feladat tételei egy adott napra (a napi nézetben és a táblázat felugró ablakában is)
+function choiceList(t, d) {
+  const list = S.options[t.key] || [];
+  const k = esc(t.key);
+  let html = list.map(o => {
+    const sel = !!optionEntry(d, t.key, o.id);
+    const pend = S.pending.has(t.key + d + 'o' + o.id);
+    return '<button class="opt' + (sel ? ' on' : '') + (pend ? ' pending' : '') + '" data-act="opt" data-task="' + k + '" data-d="' + d + '" data-opt="' + o.id + '" aria-pressed="' + sel + '">' +
+      '<span class="box">' + CHECK_SVG + '</span><span>' + esc(o.label) + '</span></button>';
+  }).join('');
+  const mine = customEntry(d, t.key);
+  const cid = 'custom-' + k + '-' + d;
+  html += '<div class="custom">' + (mine
+    ? '<label>Saját</label><div class="mine"><span>' + esc(mine.custom_text) + '</span>' +
+      '<button class="x" data-act="delcustom" data-task="' + k + '" data-d="' + d + '" aria-label="Saját tétel törlése">✕</button></div>'
+    : '<label for="' + cid + '">Saját</label><div class="row">' +
+      '<input id="' + cid + '" maxlength="200" placeholder="Mit tettél még?" data-task="' + k + '" data-d="' + d + '">' +
+      '<button class="btn" data-act="addcustom" data-task="' + k + '" data-d="' + d + '">Hozzáad</button></div>') +
+    '</div>';
+  return html;
+}
+
+// ---------- táblázatos nézet ----------
+function tableView() {
+  const today = todayYmd();
+  const weeks = Array.from({ length: weekCount() }, (_, i) => i + 1);
+  const wdays = (w) => weekDays(w).filter(inRange);
+  const daily = dailyTasks();
+  const weekly = S.tasks.filter(t => t.kind === 'weekly');
+  const activeIn = (t, w) => !t.active_weeks || t.active_weeks.includes(w);
+  const tdCls = (d) => (d === today ? 'today' : '') + (isFuture(d) ? ' future' : '');
+  const totalCols = S.settings.days + weeks.length;
+
+  let h = '<p class="tbl-hint">Oldalra görgetve látod a többi hetet. A listás feladatoknál a cellára koppintva választhatsz. <b>Σ</b> = a hét összesítése.</p>' +
+    '<div class="tbl-wrap" id="tblwrap"><table class="tbl"><thead><tr><th class="corner" rowspan="2">Feladat / nap</th>';
+  for (const w of weeks) {
+    const labels = weekly.filter(t => t.week_labels && t.week_labels[String(w)] && activeIn(t, w)).map(t => t.week_labels[String(w)]);
+    const wd = wdays(w);
+    h += '<th class="wk" colspan="' + (wd.length + 1) + '">' + w + '. hét <em>' + esc(fmtShort(wd[0])) + ' – ' + esc(fmtShort(wd[wd.length - 1])) + '</em>' +
+      (labels.length ? ' · <span>' + esc(labels.join(', ')) + '</span>' : '') + '</th>';
+  }
+  h += '</tr><tr>';
+  for (const w of weeks) {
+    for (const d of wdays(w)) {
+      const dt = parseYmd(d);
+      h += '<th class="dh' + (d === today ? ' today' : '') + '" data-col="' + d + '"><button data-act="goday" data-d="' + d + '" aria-label="' + esc(fmtLong(d)) + ' – napi nézet">' +
+        WD_SHORT[isoWeekday(d) - 1] + '<b>' + dt.getDate() + '</b></button></th>';
+    }
+    h += '<th class="sig" title="A hét összesítése">Σ</th>';
+  }
+  h += '</tr></thead><tbody>';
+
+  const group = (label) => '<tr class="grp"><th class="rowname">' + label + '</th><td colspan="' + totalCols + '"></td></tr>';
+
+  // napi feladatok
+  h += group('Napi feladatok');
+  for (const t of daily) {
+    h += '<tr><th class="rowname">' + esc(t.title.replace(' feladat', '')) + '<small>' +
+      (t.kind === 'daily_choice' ? 'választás a listából' : (t.required_weekdays ? 'szerdától péntekig kötelező' : 'minden nap')) + '</small></th>';
+    for (const w of weeks) {
+      let cnt = 0;
+      for (const d of wdays(w)) {
+        const fut = isFuture(d);
+        const lbl = esc(t.title + ', ' + fmtLong(d));
+        if (t.kind === 'daily_choice') {
+          const n = entriesOf(d, t.key).length;
+          if (n) cnt++;
+          h += '<td class="' + tdCls(d) + '"><button class="cb' + (n ? ' on' : '') + '" data-act="sheet" data-task="' + esc(t.key) + '" data-d="' + d + '"' +
+            (fut ? ' disabled' : '') + ' aria-label="' + lbl + ': ' + n + ' kiválasztva">' + (n > 1 ? '<i>' + n + '</i>' : CHECK_SVG) + '</button></td>';
+        } else {
+          const on = !!plainEntry(d, t.key);
+          if (on) cnt++;
+          const pend = S.pending.has(t.key + d);
+          h += '<td class="' + tdCls(d) + '"><button class="cb' + (on ? ' on' : '') + (isRequired(t, d) ? '' : ' optday') + (pend ? ' pending' : '') + '" data-act="check" data-task="' + esc(t.key) + '" data-d="' + d + '"' +
+            ' aria-pressed="' + on + '"' + (fut ? ' disabled' : '') + ' aria-label="' + lbl + '">' + CHECK_SVG + '</button></td>';
+        }
+      }
+      h += '<td class="sig">' + (cnt ? cnt : '') + '</td>';
+    }
+    h += '</tr>';
+  }
+  // teljes nap sor
+  h += '<tr class="pray"><th class="rowname">🙏 Teljes nap<small>minden napi feladat megvan</small></th>';
+  for (const w of weeks) {
+    let cnt = 0;
+    for (const d of wdays(w)) {
+      const c = dayStatus(d).complete;
+      if (c) cnt++;
+      h += '<td class="' + tdCls(d) + '">' + (c ? '🙏' : '') + '</td>';
+    }
+    h += '<td class="sig">' + (cnt ? cnt + '🙏' : '') + '</td>';
+  }
+  h += '</tr>';
+
+  // heti feladatok
+  h += group('Heti feladatok');
+  for (const t of weekly) {
+    h += '<tr><th class="rowname">' + esc(t.title) + '<small>heti min. ' + (t.weekly_min || 1) + '×' +
+      (t.active_weeks ? ' · ' + t.active_weeks.join('., ') + '. héten' : '') + '</small></th>';
+    for (const w of weeks) {
+      if (!activeIn(t, w)) {
+        for (const d of wdays(w)) h += '<td class="na">–</td>';
+        h += '<td class="sig"></td>';
+        continue;
+      }
+      for (const d of wdays(w)) {
+        const on = !!plainEntry(d, t.key);
+        const pend = S.pending.has(t.key + d);
+        h += '<td class="' + tdCls(d) + '"><button class="cb' + (on ? ' on' : '') + (pend ? ' pending' : '') + '" data-act="check" data-task="' + esc(t.key) + '" data-d="' + d + '"' +
+          ' aria-pressed="' + on + '"' + (isFuture(d) ? ' disabled' : '') + ' aria-label="' + esc(weeklyTitle(t, w) + ', ' + fmtLong(d)) + '">' + CHECK_SVG + '</button></td>';
+      }
+      h += '<td class="sig">' + weeklyBadge(t, w) + '</td>';
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>' +
+    '<div class="legend tbl-legend"><span><span class="cbx on"></span>teljesítve</span><span><span class="cbx"></span>még nincs</span>' +
+    '<span><span class="cbx optday"></span>aznap önkéntes</span><span><b>✔ +2</b> = heti minimum megvan, és még 2 alkalom</span></div>';
+  return h;
+}
+
+function sheet() {
+  const t = S.tasks.find(x => x.key === S.sheet.task);
+  if (!t) return '';
+  const d = S.sheet.d;
+  return '<div class="overlay" data-act="closesheet"><div class="sheet" data-act="noop" role="dialog" aria-modal="true" aria-label="' + esc(t.title) + '">' +
+    '<div class="sheet-head"><div><strong>' + esc(t.title) + '</strong><span>' + esc(fmtLong(d)) + ' · ' + esc(t.description || '') + '</span></div>' +
+    '<button class="x" data-act="closesheet" aria-label="Bezárás">✕</button></div>' +
+    '<div class="choices">' + choiceList(t, d) + '</div>' +
+    '<div class="sheet-foot"><button class="btn" data-act="closesheet">Kész</button></div></div></div>';
+}
+
+function dayView() {
+  const d = S.day;
+  const idx = dayIndex(d), w = weekNo(d);
+  const prevOk = idx > 0, nextOk = idx < S.settings.days - 1;
+  const today = todayYmd();
+  const st = dayStatus(d);
+  let html = '<div class="daynav">' +
+    '<button class="navbtn" data-act="day" data-delta="-1" aria-label="Előző nap"' + (prevOk ? '' : ' disabled') + '>‹</button>' +
+    '<div class="daytitle"><h1>' + esc(fmtLong(d)) + '</h1><p>' + (idx + 1) + '. NAP / ' + S.settings.days + ' · ' + w + '. HÉT</p>' +
+      (d !== today && inRange(today) ? '<button class="todaychip" data-act="today">Ugrás a mai napra</button>' : '') + '</div>' +
+    '<button class="navbtn" data-act="day" data-delta="1" aria-label="Következő nap"' + (nextOk ? '' : ' disabled') + '>›</button></div>';
+
+  if (today < S.settings.start_date && !DEMO) {
+    const n = diffDays(S.settings.start_date, today);
+    html += '<div class="banner">A kihívás <strong>' + n + ' nap</strong> múlva, ' + esc(fmtLong(S.settings.start_date)) + ' indul. Addig körülnézhetsz, pipálni a rajttól lehet.</div>';
+  } else if (isFuture(d)) {
+    html += '<div class="banner muted">Ez a nap még nem jött el – pipálni majd aznap lehet.</div>';
+  } else if (st.complete) {
+    html += '<div class="banner done"><span class="pray">🙏</span> Minden napi feladat megvan. Áldott napot!</div>';
+  }
+
+  html += '<h2 class="section"><span>Napi feladatok</span><span>' + st.done + '/' + st.total + '</span></h2><div class="list">';
+  for (const t of dailyTasks()) html += t.kind === 'daily_choice' ? choiceRow(t, d) : taskRow(t, d);
+  html += '</div>';
+
+  const wt = weeklyTasks(w);
+  if (wt.length) {
+    html += '<h2 class="section"><span>Heti feladatok</span><span>' + w + '. hét</span></h2><div class="list">';
+    for (const t of wt) html += taskRow(t, d, weeklyBadge(t, w), weeklyTitle(t, w));
+    html += '</div>';
+  }
+  return html;
+}
+
+function cell(on, d, required = true, label = '') {
+  if (!inRange(d)) return '<td><div class="dot out"></div></td>';
+  if (!required && !on) return '<td><div class="dot na"></div></td>';
+  return '<td><div class="dot' + (on ? ' on' : '') + '">' + (on && label ? label : '') + '</div></td>';
+}
+
+function weekView() {
+  const w = weekNo(S.day);
+  const days = weekDays(w);
+  const real = days.filter(inRange);
+  const today = todayYmd();
+  const passedDays = real.filter(d => d <= today);
+  const completeDays = passedDays.filter(d => dayStatus(d).complete).length;
+  const passed = passedDays.length;
+  const wt = weeklyTasks(w);
+  const wOk = wt.filter(t => weeklyStatus(t, w).ok).length;
+  const extras = wt.reduce((a, t) => a + weeklyStatus(t, w).extra, 0);
+
+  let html = '<div class="weeknav">' +
+    '<button class="navbtn" data-act="week" data-delta="-1" aria-label="Előző hét"' + (w > 1 ? '' : ' disabled') + '>‹</button>' +
+    '<div class="weekhead"><h1>' + w + '. hét</h1><p>' + esc(fmtShort(real[0])) + ' – ' + esc(fmtShort(real[real.length - 1])) + '</p></div>' +
+    '<button class="navbtn" data-act="week" data-delta="1" aria-label="Következő hét"' + (w < weekCount() ? '' : ' disabled') + '>›</button></div>';
+
+  html += '<div class="summary">' +
+    '<div class="stat"><b>' + completeDays + '/' + passed + '</b><span>teljes nap 🙏</span></div>' +
+    '<div class="stat"><b>' + wOk + '/' + wt.length + '</b><span>heti feladat kész</span></div>' +
+    '<div class="stat"><b>+' + extras + '</b><span>ráadás a héten</span></div></div>';
+
+  html += '<table class="grid"><thead><tr><th class="name"></th>' + days.map(d => {
+    const wd = WD_SHORT[isoWeekday(d) - 1];
+    return '<th class="' + (d === today ? 'today' : '') + '">' + (inRange(d)
+      ? '<button data-act="goday" data-d="' + d + '" aria-label="' + esc(fmtLong(d)) + '">' + wd + '<b>' + parseYmd(d).getDate() + '</b></button>'
+      : wd) + '</th>';
+  }).join('') + '<th class="sum"></th></tr></thead><tbody>';
+
+  html += '<tr class="group"><td colspan="9">Napi feladatok</td></tr>';
+  for (const t of dailyTasks()) {
+    html += '<tr><td class="name">' + esc(t.title.replace(' feladat', '')) + '</td>' + days.map(d => {
+      const n = t.kind === 'daily_choice' ? entriesOf(d, t.key).length : (plainEntry(d, t.key) ? 1 : 0);
+      return cell(n > 0, d, isRequired(t, d), t.kind === 'daily_choice' && n > 1 ? String(n) : '');
+    }).join('') + '<td class="sum"></td></tr>';
+  }
+  html += '<tr><td class="name">Teljes nap</td>' + days.map(d =>
+    !inRange(d) ? '<td></td>' : '<td class="pray-cell">' + (dayStatus(d).complete ? '🙏' : '') + '</td>').join('') + '<td class="sum"></td></tr>';
+
+  if (wt.length) {
+    html += '<tr class="group"><td colspan="9">Heti feladatok</td></tr>';
+    for (const t of wt) {
+      html += '<tr><td class="name">' + esc(weeklyTitle(t, w)) + '<small>min. ' + (t.weekly_min || 1) + '×</small></td>' +
+        days.map(d => cell(!!plainEntry(d, t.key), d)).join('') + '<td class="sum">' + weeklyBadge(t, w) + '</td></tr>';
+    }
+  }
+  html += '</tbody></table>';
+  html += '<div class="legend"><span><span class="dot on"></span>teljesítve</span><span><span class="dot"></span>még nincs</span>' +
+    '<span><span class="dot na"></span>aznap önkéntes</span><span>A napra kattintva megnyílik a napi nézet.</span></div>';
+  return html;
+}
+
+const VIEW_HASH = { day: 'nap', week: 'het', table: 'tablazat' };
+
+function render() {
+  if (!S.loaded) return;
+  // a fókusz, a beírt szöveg és a görgetés megőrzése újrarajzoláskor
+  const active = document.activeElement;
+  const keep = active && active.tagName === 'INPUT' ? { id: active.id, value: active.value, pos: active.selectionStart } : null;
+  const oldWrap = document.getElementById('tblwrap');
+  const tblScroll = oldWrap && S.lastView === 'table' ? [oldWrap.scrollLeft, oldWrap.scrollTop] : null;
+  const winY = S.lastView === S.view ? window.scrollY : 0;
+
+  const body = S.view === 'day' ? dayView() : S.view === 'week' ? weekView() : tableView();
+  $app.innerHTML = header() + '<main' + (S.view === 'table' ? ' class="wide"' : '') + '>' + body + '</main>' +
+    (S.sheet ? sheet() : '') +
+    '<footer class="foot">Szent András Kör · <a href="' + esc(CONFIG.SITE_URL) + '">szakszentandrskr.dotnest.net</a></footer>';
+
+  document.body.classList.toggle('noscroll', !!S.sheet);
+  if (S.view === 'table') {
+    const wrap = document.getElementById('tblwrap');
+    if (wrap && tblScroll && !S.scrollToday) { wrap.scrollLeft = tblScroll[0]; wrap.scrollTop = tblScroll[1]; }
+    else if (wrap) {
+      // az aktuális (vagy kiválasztott) nap hetének elejére görgetünk
+      const ref = inRange(todayYmd()) ? todayYmd() : S.day;
+      const first = weekDays(weekNo(ref)).find(inRange);
+      const col = wrap.querySelector('th[data-col="' + first + '"]');
+      const name = wrap.querySelector('.corner');
+      if (col) wrap.scrollLeft = Math.max(0, col.offsetLeft - (name ? name.offsetWidth : 0) - 4);
+    }
+    S.scrollToday = false;
+  }
+  if (S.lastView === S.view) window.scrollTo(0, winY);
+  S.lastView = S.view;
+  const hash = '#' + VIEW_HASH[S.view];
+  if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+
+  if (keep && keep.id) {
+    const el = document.getElementById(keep.id);
+    if (el) { el.value = keep.value; el.focus({ preventScroll: true }); try { el.setSelectionRange(keep.pos, keep.pos); } catch {} }
+  }
+}
+
+function applyData({ settings, tasks, options, entries }) {
+  S.settings = settings;
+  S.tasks = tasks;
+  S.options = {};
+  for (const o of options) (S.options[o.task_key] ||= []).push(o);
+  S.entries = entries;
+  if (!S.day || !inRange(S.day)) {
+    const t = todayYmd();
+    S.day = inRange(t) ? t : (t < settings.start_date ? settings.start_date : lastDay());
+  }
+  S.loaded = true;
+  render();
+}
+
+// =====================================================================
+//  ESEMÉNYEK
+// =====================================================================
+$app.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) { if (S.menu && !ev.target.closest('.menu')) { S.menu = false; render(); } return; }
+  const act = el.dataset.act, task = el.dataset.task;
+  switch (act) {
+    case 'login': store.del('szak_login_tries', sessionStorage); startLogin(); break;
+    case 'menu': S.menu = !S.menu; render(); break;
+    case 'logout': logout(); break;
+    case 'view': S.view = el.dataset.v; S.menu = false; S.sheet = null; S.scrollToday = true; render(); window.scrollTo(0, 0); break;
+    case 'day': S.day = addDays(S.day, Number(el.dataset.delta)); S.open = null; render(); break;
+    case 'today': S.day = todayYmd(); S.open = null; render(); break;
+    case 'week': {
+      const w = Math.min(weekCount(), Math.max(1, weekNo(S.day) + Number(el.dataset.delta)));
+      const first = weekDays(w).find(inRange);
+      const t = todayYmd();
+      S.day = weekDays(w).includes(t) && inRange(t) ? t : first;
+      render(); break;
+    }
+    case 'goday': S.day = el.dataset.d; S.view = 'day'; S.open = null; render(); window.scrollTo(0, 0); break;
+    case 'check': toggleCheck(task, el.dataset.d || S.day); break;
+    case 'toggleopen': S.open = S.open === task ? null : task; render(); break;
+    case 'opt': toggleOption(task, Number(el.dataset.opt), el.dataset.d || S.day); break;
+    case 'addcustom': {
+      const d = el.dataset.d || S.day;
+      const input = document.getElementById('custom-' + task + '-' + d);
+      if (input) saveCustom(task, d, input.value);
+      break;
+    }
+    case 'delcustom': removeCustom(task, el.dataset.d || S.day); break;
+    case 'sheet': S.sheet = { task, d: el.dataset.d }; render(); break;
+    case 'closesheet': S.sheet = null; render(); break;
+    case 'noop': break;
+    case 'setstart': {
+      const v = document.getElementById('startDate').value;
+      if (!v) return;
+      try { await DB.setStartDate(v); S.menu = false; S.day = null; await reload(); toast('Kezdődátum elmentve: ' + v); }
+      catch (e) { await handleError(e); }
+      break;
+    }
+  }
+});
+$app.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && ev.target.matches('.custom input')) saveCustom(ev.target.dataset.task, ev.target.dataset.d || S.day, ev.target.value);
+  if (ev.key === 'Escape' && (S.menu || S.sheet)) { S.menu = false; S.sheet = null; render(); }
+});
+
+// =====================================================================
+//  INDULÁS
+// =====================================================================
+(async function init() {
+  // a menüből érkező link (#nap, #het, #tablazat) határozza meg a kezdő nézetet
+  const fromHash = Object.keys(VIEW_HASH).find(k => '#' + VIEW_HASH[k] === location.hash);
+  if (fromHash) S.view = fromHash;
+  S.scrollToday = true;
+  try {
+    if (DEMO) {
+      S.profile = { display_name: 'Demó Dénes', is_admin: true };
+      applyData(await DB.loadAll());
+      return;
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.has('code') || params.has('error')) {
+      const { session, restore } = await finishLogin(params);
+      S.session = session;
+      if (restore) { S.view = restore.view || 'day'; S.day = restore.day || null; }
+    } else {
+      S.session = loadSession();
+      if (!S.session) { await startLogin(); return; }
+    }
+    S.profile = S.session.profile;
+    renderSplash('Adatok betöltése…');
+    applyData(await DB.loadAll());
+  } catch (e) {
+    if (e instanceof AuthExpired) { store.del('szak_session'); await startLogin(); return; }
+    console.error(e);
+    renderError('Nem sikerült betölteni a követőt.', e.message);
+  }
+})();
+</script>
+</body>
+</html>
