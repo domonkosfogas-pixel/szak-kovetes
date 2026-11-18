@@ -356,11 +356,18 @@ async function api(path, { method = 'GET', body, prefer } = {}) {
 const DB = {
   async loadAll() {
     if (DEMO) return demoLoad();
-    const [settings, tasks, options] = await Promise.all([
+    const [settings, tasks, options, me] = await Promise.all([
       api('challenge_settings?select=id,title,start_date,days&id=eq.' + encodeURIComponent(CONFIG.CHALLENGE_ID)),
       api('tasks?select=*&active=eq.true&order=sort'),
       api('task_options?select=id,task_key,label,sort&active=eq.true&order=task_key,sort'),
+      // a profil mindig frissen az adatbázisból (pl. ha közben adminná tették)
+      api('profiles?select=id,display_name,is_admin&id=eq.' + encodeURIComponent(S.session.profile.id)),
     ]);
+    if (me && me.length) {
+      S.profile = me[0];
+      S.session.profile = me[0];
+      store.set('szak_session', S.session);
+    }
     if (!settings.length) throw new Error('Nincs beállítva a kihívás (' + CONFIG.CHALLENGE_ID + ').');
     const st = settings[0];
     const end = addDays(st.start_date, st.days - 1);
