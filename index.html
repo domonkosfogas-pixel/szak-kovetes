@@ -28,6 +28,11 @@
   .top-inner { max-width: 760px; margin: 0 auto; padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; }
   .brand { font-family: var(--mono); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 1rem; flex: 1; }
   .brand small { display: block; font-size: .65rem; letter-spacing: .12em; color: var(--orange); }
+  .home { flex: none; display: inline-flex; align-items: center; gap: .35rem; height: 36px; padding: 0 .7rem; border: 2px solid #fff; color: #fff;
+          text-decoration: none; font-family: var(--mono); font-weight: 700; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+  .home span { font-size: 1rem; line-height: 1; }
+  .home:hover, .home:focus-visible { background: var(--orange); border-color: var(--orange); }
+  @media (max-width: 380px) { .home { padding: 0 .55rem; font-size: .66rem; } .brand small { display: none; } }
   .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--orange); color: #fff; font-family: var(--mono);
             font-weight: 700; display: grid; place-items: center; text-transform: uppercase; }
   .tabs { max-width: 760px; margin: 0 auto; display: flex; padding: 0 1rem; gap: .25rem; }
@@ -537,6 +542,7 @@ function header() {
   const initial = (p.display_name || '?').trim().charAt(0) || '?';
   return (DEMO ? '<div class="demo-flag">DEMÓ – az adatok nem mentődnek</div>' : '') +
     '<header class="top"><div class="top-inner">' +
+      '<a class="home" href="' + esc(CONFIG.SITE_URL) + '" aria-label="Vissza a SZAK főoldalra"><span aria-hidden="true">←</span> Főoldal</a>' +
       '<div class="brand">SZAK Követő<small>' + esc(S.settings.title) + '</small></div>' +
       '<button class="avatar" data-act="menu" aria-haspopup="true" aria-expanded="' + S.menu + '" aria-label="Menü">' + esc(initial) + '</button>' +
     '</div>' +
